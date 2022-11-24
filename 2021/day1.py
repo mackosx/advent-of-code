@@ -1,5 +1,5 @@
 import os
-import utils.utils as utils
+import utils.utils
 
 
 def puzzle_1(input):
@@ -20,7 +20,9 @@ def puzzle_2(input):
     return count
 
 
-parsed_input = utils.parse_file(os.path.join(os.path.dirname(__file__), "input.txt"))
+parsed_input = utils.parse_file(
+    os.path.join(os.path.dirname(__file__), "day1_input.txt")
+)
 
 result = puzzle_1(parsed_input)
 print(result)
