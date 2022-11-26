@@ -5,7 +5,7 @@ from math import ceil
 
 def common_bit(input, position, f):
     bit_count = 0
-    threshold = int(ceil(len(list(input)) / 2))
+    threshold = int(ceil(len(input) / 2))
     for line in input:
         bit_count += int(line[position])
     if f == "most":
@@ -20,8 +20,8 @@ def get_rating(input, f):
     for position in range(positions):
         bit = common_bit(filtered_list, position, f)
         # Only keep items with common bit at current position
-        filtered_list = list(filter(lambda item: item[position] == bit, filtered_list))
-        if len(list(filtered_list)) == 1:
+        filtered_list = [item for item in filtered_list if item[position] == bit]
+        if len(filtered_list) == 1:
             return filtered_list[0]
 
 
