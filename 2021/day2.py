@@ -1,5 +1,5 @@
 import os
-from utils import utils
+from python_utils import utils
 
 
 def puzzle_1(input):
