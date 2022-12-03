@@ -7,13 +7,9 @@ def puzzle_2():
                 lambda x: x - 96 if x >= 97 and x <= 123 else x - 38,
                 [
                     ord(
-                        next(
-                            iter(
-                                set(input[i]).intersection(
-                                    set(input[i + 1]), set(input[i + 2])
-                                )
-                            )
-                        )
+                        set(input[i])
+                        .intersection(set(input[i + 1]), set(input[i + 2]))
+                        .pop()
                     )
                     for i in range(0, len(input), 3)
                 ],
