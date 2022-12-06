@@ -41,8 +41,44 @@ func puzzle1(input string) {
 	println(results)
 }
 
+func puzzle2(input string) {
+	parts := strings.Split(input, "\n\n")
+	state := strings.Split(parts[0], "\n")
+	// Populate initial state
+	stacks := make([][]string, 9)
+	for height := 0; height < len(state)-1; height++ {
+		line := state[height]
+		for i := 1; i < len(line); i += 4 {
+			if crate := string(line[i]); crate != " " {
+				index := (i / 4)
+				stacks[index] = append(stacks[index], crate)
+			}
+		}
+	}
+	instructions := strings.Split(parts[1], "\n")
+	for _, line := range instructions {
+		parts = strings.Split(line, " ")
+		count, _ := strconv.Atoi(parts[1])
+		from, _ := strconv.Atoi(parts[3])
+		to, _ := strconv.Atoi(parts[5])
+		from_stack := stacks[from-1]
+		elems := from_stack[0:count]
+		t := make([]string, len(elems), (cap(elems)))
+		copy(t, elems)
+		elems = t
+		stacks[from-1] = from_stack[count:]
+		stacks[to-1] = append(elems, stacks[to-1]...)
+	}
+	results := ""
+	for _, stack := range stacks {
+		results += stack[0]
+	}
+	println(results)
+}
+
 func main() {
 	raw_input, _ := os.ReadFile("./day5_input.txt")
 	input := string(raw_input)
 	puzzle1(input)
+	puzzle2(input)
 }
