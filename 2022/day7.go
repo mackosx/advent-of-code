@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -14,16 +13,13 @@ type Node struct {
 	parent     *Node
 }
 
-var nodes = make(map[string]*Node)
+var nodes = []*Node{}
 
 func pwd(node *Node) {
-	parent_ptr := node
-	path := ""
+	parent_ptr := node.parent
+	path := node.name
 	for parent_ptr != nil {
 		path = parent_ptr.name + "/" + path
-		if parent_ptr.parent == nil {
-			break
-		}
 		parent_ptr = parent_ptr.parent
 	}
 	println(path)
@@ -31,48 +27,29 @@ func pwd(node *Node) {
 
 func puzzle1(input string) {
 	commands := strings.Split(input, "\n")
-	nodes["/"] = &Node{"/", true, 0, nil}
 	var current_node *Node
 	for _, input_line := range commands {
 		tokens := strings.Split(input_line, " ")
-		switch tokens[0] {
-		case "$":
-			switch tokens[1] {
-			case "cd":
-				println(input_line)
+		if tokens[0] == "$" {
+			if tokens[1] == "cd" {
 				if next_dir := tokens[2]; next_dir == ".." {
 					current_node = current_node.parent
-					continue
 				} else {
-					current_node, _ = nodes[next_dir]
+					current_node = &Node{next_dir, true, 0, current_node}
+					nodes = append(nodes, current_node)
 				}
-				pwd(current_node)
-			case "ls":
-				continue
 			}
-		case "dir":
-			node_ptr := &Node{tokens[1], true, 0, nil}
-			nodes[tokens[1]] = node_ptr
-			node_ptr.parent = current_node
-		default:
+		} else {
 			size, _ := strconv.Atoi(tokens[0])
 			node_ptr := &Node{tokens[1], false, size, current_node}
-			nodes[tokens[1]] = node_ptr
-
+			nodes = append(nodes, node_ptr)
 			// Update parent sizes
 			parent_ptr := current_node
 			for parent_ptr != nil {
-				fmt.Printf("adding %d to %v from %s\n", size, *parent_ptr, node_ptr.name)
 				parent_ptr.total_size += size
-				fmt.Printf("Result %+v\n", *parent_ptr)
 				parent_ptr = parent_ptr.parent
-				if parent_ptr == nil {
-					break
-				}
 			}
-
 		}
-
 	}
 	sum := 0
 	for _, node := range nodes {
