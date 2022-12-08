@@ -13,20 +13,8 @@ type Node struct {
 	parent     *Node
 }
 
-var nodes = []*Node{}
-
-func pwd(node *Node) {
-	parent_ptr := node.parent
-	path := node.name
-	for parent_ptr != nil {
-		path = parent_ptr.name + "/" + path
-		parent_ptr = parent_ptr.parent
-	}
-	println(path)
-}
-
-func puzzle1(input string) {
-	commands := strings.Split(input, "\n")
+func parseCommands(commands []string) []*Node {
+	var nodes = []*Node{}
 	var current_node *Node
 	for _, input_line := range commands {
 		tokens := strings.Split(input_line, " ")
@@ -51,6 +39,12 @@ func puzzle1(input string) {
 			}
 		}
 	}
+	return nodes
+}
+
+func puzzle1(input string) {
+	commands := strings.Split(input, "\n")
+	nodes := parseCommands(commands)
 	sum := 0
 	for _, node := range nodes {
 		if node.total_size <= 100000 && node.is_dir {
