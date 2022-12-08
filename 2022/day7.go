@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -55,7 +56,19 @@ func puzzle1(input string) {
 }
 
 func puzzle2(input string) {
-
+	commands := strings.Split(input, "\n")
+	nodes := parseCommands(commands)
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].total_size < nodes[j].total_size
+	})
+	current_unused := 70000000 - nodes[len(nodes)-1].total_size
+	index := sort.Search(len(nodes), func(i int) bool {
+		if nodes[i].total_size+current_unused >= 30000000 {
+			return true
+		}
+		return false
+	})
+	println(nodes[index].total_size)
 }
 
 func main() {
