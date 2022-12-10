@@ -43,10 +43,10 @@ func puzzle2(input string) {
 	cycles := parseCycles(instructions)
 	for cycle_idx, increment := range cycles {
 		pixel := cycle_idx % width
-		if pixel == register-1 || pixel == register || pixel == register+1 {
-			print("#")
+		if pixel >= register-1 && pixel <= register+1 {
+			print("⬜️")
 		} else {
-			print(".")
+			print("⬛️")
 		}
 		register += increment
 		if pixel == width-1 {
