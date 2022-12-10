@@ -52,7 +52,6 @@ func puzzle2(input string) {
 		if pixel == width-1 {
 			println()
 		}
-
 	}
 }
 
