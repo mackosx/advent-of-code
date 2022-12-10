@@ -61,26 +61,7 @@ func puzzle1(input string) {
 	println(len(positions_occupied))
 }
 
-func printSimulation(knots [10]*Knot, height int, width int) {
-	for column := width; column >= 0; column-- {
-		for row := 0; row <= height; row++ {
-			found_knot := false
-			for index, knot := range knots {
-				if knot.position.x == row && knot.position.y == column {
-					found_knot = true
-					print(index)
-					break
-				}
-			}
-			if !found_knot {
-				print(".")
-			}
-		}
-		println()
-	}
-}
-
-func clamp(num, low, high float32) float32 {
+func clamp(num, low, high int) int {
 	if num < low {
 		return low
 	}
@@ -91,8 +72,8 @@ func clamp(num, low, high float32) float32 {
 }
 
 func calculateCatchUp(head *Knot, tail *Knot) Position {
-	x_increment := int(clamp(float32(head.position.x)-float32(tail.position.x), -1, 1))
-	y_increment := int(clamp(float32(head.position.y)-float32(tail.position.y), -1, 1))
+	x_increment := clamp(head.position.x-tail.position.x, -1, 1)
+	y_increment := clamp(head.position.y-tail.position.y, -1, 1)
 	return Position{tail.position.x + x_increment, tail.position.y + y_increment}
 }
 
