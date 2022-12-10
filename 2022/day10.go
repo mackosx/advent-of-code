@@ -14,8 +14,7 @@ func sumRange(start int, end int, arr []int) int {
 	return sum
 }
 
-func puzzle1(input string) {
-	instructions := strings.Split(input, "\n")
+func parseCycles(instructions []string) []int {
 	vals := []int{}
 	for _, instr := range instructions {
 		vals = append(vals, 0)
@@ -24,6 +23,12 @@ func puzzle1(input string) {
 			vals = append(vals, val)
 		}
 	}
+	return vals
+}
+
+func puzzle1(input string) {
+	instructions := strings.Split(input, "\n")
+	vals := parseCycles(instructions)
 	sum := 0
 	for _, num := range []int{20, 60, 100, 140, 180, 220} {
 		sum += sumRange(0, num-1, vals) * num
@@ -32,7 +37,23 @@ func puzzle1(input string) {
 }
 
 func puzzle2(input string) {
+	instructions := strings.Split(input, "\n")
+	register := 1
+	width := 40
+	cycles := parseCycles(instructions)
+	for cycle_idx, increment := range cycles {
+		pixel := cycle_idx % width
+		if pixel == register-1 || pixel == register || pixel == register+1 {
+			print("#")
+		} else {
+			print(".")
+		}
+		register += increment
+		if pixel == width-1 {
+			println()
+		}
 
+	}
 }
 
 func main() {
