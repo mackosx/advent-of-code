@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -18,16 +19,7 @@ type Knot struct {
 }
 
 func knotNeedsToMove(head *Knot, tail *Knot) bool {
-	for _, i := range [3]int{-1, 0, 1} {
-		for _, j := range [3]int{-1, 0, 1} {
-			x := tail.position.x + i
-			y := tail.position.y + j
-			if head.position.x == x && head.position.y == y {
-				return false
-			}
-		}
-	}
-	return true
+	return math.Abs(float64(head.position.x-tail.position.x)) > 1 || math.Abs(float64(head.position.y-tail.position.y)) > 1
 }
 
 func puzzle1(input string) {
