@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -9,18 +10,19 @@ import (
 
 type Monkey struct {
 	throws_to          map[bool]int
-	items              []int
+	items              []int64
 	test_divisible_num int
 	operation          string
 	throws             int
 }
 
-func doOperation(old int, operation string) int {
+func doOperation(old int64, operation string) int64 {
 	tokens := strings.Split(operation, " ")
-	parseToken := func(token string) int {
+	parseToken := func(token string) int64 {
 		num := old
 		if token != "old" {
-			num, _ = strconv.Atoi(token)
+			parsed, _ := strconv.Atoi(token)
+			num = int64(parsed)
 		}
 		return num
 	}
@@ -36,10 +38,10 @@ func parseMonkeys(monkey_setup []string) []*Monkey {
 	monkeys := make([]*Monkey, len(monkey_setup))
 	for i, monkey_text := range monkey_setup {
 		lines := strings.Split(monkey_text, "\n")
-		items := []int{}
+		items := []int64{}
 		for _, worry_str := range strings.Split(strings.Split(lines[1], ": ")[1], ", ") {
 			worry, _ := strconv.Atoi(worry_str)
-			items = append(items, worry)
+			items = append(items, int64(worry))
 		}
 		true_throw, _ := strconv.Atoi(string(lines[4][29]))
 		false_throw, _ := strconv.Atoi(string(lines[5][30]))
@@ -56,34 +58,61 @@ func parseMonkeys(monkey_setup []string) []*Monkey {
 	return monkeys
 }
 
-func puzzle1(input string) {
-	monkey_setup := strings.Split(input, "\n\n")
-	monkeys := parseMonkeys(monkey_setup)
-	for i := 0; i < 10000; i++ {
+func simulateRounds(monkeys []*Monkey, count int, divide bool) int64 {
+	for i := 0; i < count; i++ {
 		for _, monkey := range monkeys {
 			for _, worry := range monkey.items {
 				// Calculate new worry
-				worry = doOperation(worry, monkey.operation) / 3
+				// fmt.Printf("Worry before %d %s\n", worry, monkey.operation)
+				worry = doOperation(worry, monkey.operation)
+				if divide {
+					worry /= 3
+				} else {
+
+					// find prime factors and take one of each to make number small?
+				}
+				// fmt.Printf("Worry after %d\n", worry)
 				// Throw to another monkey
-				next_index := monkey.throws_to[worry%monkey.test_divisible_num == 0]
-				monkeys[next_index].items = append(monkeys[next_index].items, worry)
+				next_index := monkey.throws_to[worry%int64(monkey.test_divisible_num) == 0]
+				// fmt.Printf("Throwing to %d\n", next_index)
+				next_monkey := monkeys[next_index]
+				next_monkey.items = append(next_monkey.items, worry)
 				monkey.throws++
 			}
-			monkey.items = []int{}
+			monkey.items = []int64{}
 		}
+		if i+1 == 20 {
+			println("State after round :", i+1)
+			for i, monkey := range monkeys {
+				fmt.Printf("Monkey: %d throws: %d\n", i, monkey.throws)
+			}
+		}
+		println("round ", i+1, " done")
 	}
 	sort.Slice(monkeys, func(i, j int) bool { return monkeys[i].throws > monkeys[j].throws })
-	println(monkeys[1].throws * monkeys[0].throws)
+	// for _, monkey := range monkeys {
+	// 	fmt.Printf("%v\n", monkey)
+	// }
+	return int64(monkeys[1].throws) * int64(monkeys[0].throws)
+}
 
+func puzzle1(input string) {
+	monkey_setup := strings.Split(input, "\n\n")
+	monkeys := parseMonkeys(monkey_setup)
+	monkey_business := simulateRounds(monkeys, 20, true)
+	println(monkey_business)
 }
 
 func puzzle2(input string) {
-
+	monkey_setup := strings.Split(input, "\n\n")
+	monkeys := parseMonkeys(monkey_setup)
+	monkey_business := simulateRounds(monkeys, 20, false)
+	println(monkey_business)
 }
 
 func main() {
 	raw_input, _ := os.ReadFile("./day11_input.txt")
 	input := string(raw_input)
-	puzzle1(input)
+	// puzzle1(input)
 	puzzle2(input)
 }
