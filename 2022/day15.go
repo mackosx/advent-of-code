@@ -1,38 +1,43 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"os"
 	"strconv"
 	"strings"
 )
 
-type Coverage struct {
-	left_x   int
-	right_x  int
-	top_y    int
-	bottom_y int
-}
-
 type Position struct {
 	x int
 	y int
 }
 
-func getCoverage(signal Position, closest_beacon Position) Coverage {
-	dist := int(math.Abs(float64(signal.x-closest_beacon.x) + math.Abs(float64(signal.y-closest_beacon.y))))
-	return Coverage{
-		left_x:   signal.x - dist,
-		right_x:  signal.x + dist,
-		top_y:    signal.y + dist,
-		bottom_y: signal.y - dist}
+func abs(num int) int {
+	if num < 0 {
+		return -1 * num
+	} else {
+		return num
+	}
 }
 
-func isInside(position Position, coverage Coverage) bool {
-	// TODO: Refactor to support "manhattan" inside; this generates a square box
-	return (position.x >= coverage.left_x && position.x <= coverage.right_x &&
-		position.y <= coverage.top_y && position.y >= coverage.bottom_y)
+func min(num1 int, num2 int) int {
+	if num1 < num2 {
+		return num1
+	} else {
+		return num2
+	}
+}
+
+func max(num1 int, num2 int) int {
+	if num1 > num2 {
+		return num1
+	} else {
+		return num2
+	}
+}
+
+func manhattanDist(p1 Position, p2 Position) int {
+	return abs(p1.x-p2.x) + abs(p1.y-p2.y)
 }
 
 func parseLine(input string) (signal Position, beacon Position) {
@@ -46,54 +51,50 @@ func parseLine(input string) (signal Position, beacon Position) {
 	return
 }
 
-func puzzle1(input string) {
-	// build up list of areas from signal/beacon input
-
-	// check if an individual position intersects with a list of "areas"
-	signal_to_coverage := make(map[Position]Coverage)
+func getCoveredPositions(input string, row int) int {
+	closest_beacon := make(map[Position]Position)
 	lines := strings.Split(input, "\n")
 	right_edge := math.MinInt
 	left_edge := math.MaxInt
 	for _, line := range lines {
-
-		signal, beacon := parseLine(line)
-		coverage := getCoverage(signal, beacon)
-
-		left_edge = int(math.Min(float64(left_edge), float64(coverage.left_x)))
-		right_edge = int(math.Max(float64(right_edge), float64(coverage.right_x)))
-
-		signal_to_coverage[signal] = coverage
-		fmt.Printf("%+v,  %d -> %d\n", signal, left_edge, right_edge)
-
+		sensor, beacon := parseLine(line)
+		dist := manhattanDist(sensor, beacon)
+		left_edge = min(left_edge, sensor.x-dist)
+		right_edge = max(right_edge, sensor.x+dist)
+		closest_beacon[sensor] = beacon
 	}
-	y := 10
+
 	occupied := 0
 	for x := left_edge; x <= right_edge; x++ {
-		inside := false
-		for _, cov := range signal_to_coverage {
-			if inside = isInside(Position{x, y}, cov); inside {
+		var position *Position
+		for sensor, beacon := range closest_beacon {
+			dist := manhattanDist(sensor, beacon)
+			position = &Position{x, row}
+			// Check if we are looking at a Beacon
+			if position.x == beacon.x && position.y == beacon.y {
+				break
+			}
+			// Check if we are in range of the sensor
+			if manhattanDist(*position, sensor) <= dist {
 				occupied++
-				print("#")
 				break
 			}
 		}
-		if !inside {
-			print(".")
-		}
 	}
-	println()
-	println(left_edge, " -> ", right_edge)
+	return occupied
+}
+
+func puzzle1(input string) {
+	y := 2000000
+	occupied := getCoveredPositions(input, y)
 	println(occupied)
-
-	// need to handle beacons as well
-
 }
 
 func puzzle2(input string) {
 }
 
 func main() {
-	raw_input, _ := os.ReadFile("./day15_test.txt")
+	raw_input, _ := os.ReadFile("./day15_input.txt")
 	input := string(raw_input)
 	puzzle1(input)
 	puzzle2(input)
