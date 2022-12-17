@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -51,6 +52,15 @@ func parseLine(input string) (signal Position, beacon Position) {
 	return
 }
 
+func isCovered(sensors map[Position]int, pos Position) bool {
+	for sensor, dist := range sensors {
+		if manhattanDist(sensor, pos) <= dist {
+			return true
+		}
+	}
+	return false
+}
+
 func getCoveredPositions(input string, row int) int {
 	closest_beacon := make(map[Position]Position)
 	lines := strings.Split(input, "\n")
@@ -90,12 +100,58 @@ func puzzle1(input string) {
 	println(occupied)
 }
 
+func getPositionsAtRange(sensor Position, distance int) []*Position {
+	max_range := 4000000
+	positions := []*Position{}
+	mx := sensor.x + distance
+	x := max(sensor.x-distance, 0)
+	dy := 0
+	y := sensor.y + dy
+	for x <= mx && x <= max_range && dy <= distance && y <= max_range && y >= 0 {
+		positions = append(positions, &Position{x, y})
+		if dy != -dy && -y <= max_range && -y >= 0 {
+			positions = append(positions, &Position{x, -y})
+		}
+		x++
+		dy++
+		y = sensor.y + dy
+	}
+	return positions
+}
+
 func puzzle2(input string) {
+	lines := strings.Split(input, "\n")
+	valid_points_outside_count := make(map[Position]int)
+	var highest_count_outside *Position
+	max_count := 0
+	sensor_dist := make(map[Position]int)
+	for _, line := range lines {
+		sensor, beacon := parseLine(line)
+		dist := manhattanDist(sensor, beacon)
+		sensor_dist[sensor] = dist
+	}
+	for sensor, dist := range sensor_dist {
+
+		points := getPositionsAtRange(sensor, dist+1)
+		for _, pos := range points {
+			if !isCovered(sensor_dist, *pos) {
+				count, _ := valid_points_outside_count[*pos]
+				count++
+				if count > max_count {
+					max_count = count
+					highest_count_outside = pos
+				}
+				valid_points_outside_count[*pos] = count
+			}
+		}
+	}
+	fmt.Printf("%+v Count: %d\n, Len: %d\n", *highest_count_outside, max_count, len(valid_points_outside_count))
+	println((highest_count_outside.x * 4000000) + highest_count_outside.y)
 }
 
 func main() {
 	raw_input, _ := os.ReadFile("./day15_input.txt")
 	input := string(raw_input)
-	puzzle1(input)
+	// puzzle1(input)
 	puzzle2(input)
 }
