@@ -40,11 +40,13 @@ func getNextShape(current_rock *Shape, o *OccupiedMap, height int) *Shape {
 	next_index := 0
 	if current_rock != nil {
 		next_index = current_rock.id + 1
+	} else {
+		height--
 	}
 	next_shape := shapes[next_index%5]
 	points := []Point{}
 	for _, point := range next_shape.points {
-		points = append(points, Point{point.x, point.y + height + 4})
+		points = append(points, Point{point.x, point.y + height + 3})
 	}
 	next_shape.points = points
 	return &next_shape
@@ -127,9 +129,8 @@ func puzzle1(input string) {
 	max_falls := 2022
 	occupied := make(OccupiedMap)
 	i := 0
-	height := 0
+	height := 1
 	current_rock := getNextShape(nil, &occupied, height)
-	fmt.Printf("Starting rock: %v\n", current_rock)
 	for rock_fall_count < max_falls {
 		movement := input[i%(len(input))]
 		simulateJet(rune(movement), &occupied, current_rock)
@@ -139,14 +140,14 @@ func puzzle1(input string) {
 			for _, point := range current_rock.points {
 				occupied[point] = true
 			}
-			if top_of_rock := maxY(current_rock); top_of_rock > height {
-				height = top_of_rock
+			if top_of_rock := maxY(current_rock); top_of_rock+1 > height {
+				height = top_of_rock + 1
 			}
 			current_rock = getNextShape(current_rock, &occupied, height)
 		}
 		i++
 	}
-	fmt.Printf("%d %+v %d\n", maxY(current_rock), current_rock, rock_fall_count)
+	fmt.Printf("%d\n", height)
 }
 
 func main() {
