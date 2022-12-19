@@ -36,89 +36,90 @@ func maxY(rock *Shape) int {
 	return maxY
 }
 
-func moveRock(o *OccupiedMap, old *Shape, new *Shape) {
-	if old != nil {
-		for _, point := range old.points {
-			(*o)[point] = false
-		}
-	}
-	for _, point := range new.points {
-		(*o)[point] = true
-	}
-	old.points = new.points
-}
-
-func getNextShape(current_rock *Shape, o *OccupiedMap) *Shape {
+func getNextShape(current_rock *Shape, o *OccupiedMap, height int) *Shape {
 	next_index := 0
 	if current_rock != nil {
 		next_index = current_rock.id + 1
 	}
-	max_y := 0
-	if current_rock != nil {
-		max_y = maxY(current_rock)
-	}
-	fmt.Printf("Current max Y %d\n", max_y)
-	next_shape := shapes[next_index%4]
+	next_shape := shapes[next_index%5]
 	points := []Point{}
 	for _, point := range next_shape.points {
-		points = append(points, Point{point.x, point.y + max_y + 3})
-		println(point.y)
+		points = append(points, Point{point.x, point.y + height + 4})
 	}
-	moveRock(o, &next_shape, &Shape{points: points})
-	fmt.Printf("Next shape %v\n", next_shape)
+	next_shape.points = points
 	return &next_shape
 }
 
 func simulateFall(occupied *OccupiedMap, rock_shape *Shape) error {
-	new_shape := Shape{[]Point{}, rock_shape.id}
+	new_points := []Point{}
 	// Make a new shape 1 lower.
 	for _, point := range rock_shape.points {
 		new_height := point.y - 1
 		if new_height < 0 {
 			return errors.New("Can't complete fall, we're at the bottom.")
 		}
-		new_shape.points = append(
-			new_shape.points,
+		new_points = append(
+			new_points,
 			Point{point.x, new_height})
 	}
-	for _, point := range new_shape.points {
+	for _, point := range new_points {
 		is_occupied, _ := (*occupied)[point]
 		if is_occupied {
-			return errors.New("Can't complete fall, we hit another rock.")
+			return errors.New(fmt.Sprintf("Can't complete fall, we hit another rock at %v.", point))
 		}
 	}
-	moveRock(occupied, rock_shape, &new_shape)
+	rock_shape.points = new_points
 	return nil
 }
 
 func simulateJet(direction rune, o *OccupiedMap, current_rock *Shape) {
-	new_shape := Shape{[]Point{}, current_rock.id}
+	new_points := []Point{}
 	sign := -1
 	if string(direction) == ">" {
 		sign = 1
 	}
 	for _, point := range current_rock.points {
 		new_x := point.x + sign
-		if new_x > 6 {
+		if new_x > 6 || new_x < 0 {
 			return
 		}
-		new_shape.points = append(
-			new_shape.points,
-			Point{point.x + 1, point.y})
+		new_points = append(
+			new_points,
+			Point{new_x, point.y})
 	}
-	for _, point := range new_shape.points {
+	for _, point := range new_points {
 		is_occupied, _ := (*o)[point]
 		if is_occupied {
 			return
 		}
 	}
-	for _, point := range current_rock.points {
-		(*o)[point] = false
+	current_rock.points = new_points
+}
+
+func printOccupied(o *OccupiedMap, current_rock *Shape, height int) {
+	for h := height; h >= 0; h-- {
+		for x := 0; x <= 6; x++ {
+			current := Point{x, h}
+			falling_pt := false
+			for _, pt := range current_rock.points {
+				if pt == current {
+					falling_pt = true
+					print("@")
+					break
+				}
+			}
+			is_occupied, _ := (*o)[current]
+			if !falling_pt {
+				if is_occupied {
+					print("#")
+				} else {
+					print(".")
+				}
+			}
+		}
+		println()
 	}
-	for _, point := range new_shape.points {
-		(*o)[point] = true
-	}
-	current_rock.points = new_shape.points
+	println()
 }
 
 func puzzle1(input string) {
@@ -126,26 +127,26 @@ func puzzle1(input string) {
 	max_falls := 2022
 	occupied := make(OccupiedMap)
 	i := 0
-	current_rock := getNextShape(nil, &occupied)
+	height := 0
+	current_rock := getNextShape(nil, &occupied, height)
 	fmt.Printf("Starting rock: %v\n", current_rock)
 	for rock_fall_count < max_falls {
-		fmt.Printf("Simulating fall on id: %d\n", current_rock.id)
+		movement := input[i%(len(input))]
+		simulateJet(rune(movement), &occupied, current_rock)
 		err := simulateFall(&occupied, current_rock)
 		if err != nil {
-			// this means we can't move anymore
-			println(err.Error())
 			rock_fall_count++
-			current_rock = getNextShape(current_rock, &occupied)
-			fmt.Printf("Next shape: %v\n", current_rock)
+			for _, point := range current_rock.points {
+				occupied[point] = true
+			}
+			if top_of_rock := maxY(current_rock); top_of_rock > height {
+				height = top_of_rock
+			}
+			current_rock = getNextShape(current_rock, &occupied, height)
 		}
-		println("Fall completed")
-		movement := input[i%(len(input)-1)]
-		fmt.Printf("Simulating jet (%s) on id: %d\n", string(movement), current_rock.id)
-		simulateJet(rune(movement), &occupied, current_rock)
 		i++
 	}
 	fmt.Printf("%d %+v %d\n", maxY(current_rock), current_rock, rock_fall_count)
-
 }
 
 func main() {
