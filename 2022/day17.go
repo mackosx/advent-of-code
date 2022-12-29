@@ -7,6 +7,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"strings"
 )
 
 type Point struct {
@@ -127,16 +128,27 @@ func printOccupied(o *OccupiedMap, current_rock *Shape, height int64) {
 	println()
 }
 
-func puzzle1(input string) {
+func getHashKey(row string, input_index int, rock_id int) string {
+	return fmt.Sprintf("%s %d %d", row, input_index, rock_id)
+}
+
+type CycleResult struct {
+	count  int64
+	height int64
+}
+
+func puzzle(input string) {
 	var rock_fall_count int64 = 0
-	// var max_falls int64 = 1000000000000
-	var max_falls int64 = 100
+	const max_falls int64 = 1_000_000_000_000
 	occupied := make(OccupiedMap)
-	i := 0
 	var height int64 = 1
+	var height_diff int64
+	cycle_rocks := make(map[string]CycleResult)
 	current_rock := getNextShape(nil, &occupied, height)
-	for rock_fall_count < max_falls {
-		movement := input[i%(len(input))]
+	cycled := false
+	for i := 0; rock_fall_count <= max_falls; i++ {
+		input_index := i % (len(input))
+		movement := input[input_index]
 		simulateJet(rune(movement), &occupied, current_rock)
 		err := simulateFall(&occupied, current_rock)
 		if err != nil {
@@ -144,20 +156,44 @@ func puzzle1(input string) {
 			for _, point := range *current_rock.points {
 				occupied[point] = true
 			}
-			if top_of_rock := maxY(current_rock); top_of_rock+1 > height {
-				height = top_of_rock + 1
+			top_of_rock := maxY(current_rock)
+			difference := top_of_rock + 1 - height
+			if difference > 0 {
+				height += difference
+			}
+			// Start at 10,000 to avoid initial settling
+			if rock_fall_count > 10_000 && !cycled {
+				row_str := strings.Builder{}
+				for col := 0; col < 7; col++ {
+					_, ok := occupied[Point{col, height - 1}]
+					if ok {
+						row_str.WriteString("#")
+					} else {
+						row_str.WriteString(".")
+					}
+				}
+				key := getHashKey(row_str.String(), input_index, current_rock.id)
+				cycle_result, ok := cycle_rocks[key]
+				if ok {
+					// Increment rock falls and height by cycle increments
+					cycle_count := rock_fall_count - cycle_result.count
+					cycle_height := height - cycle_result.height
+					for rock_fall_count+cycle_count < max_falls {
+						rock_fall_count += cycle_count
+						height_diff += cycle_height
+					}
+					cycled = true
+				} else {
+					cycle_rocks[key] = CycleResult{rock_fall_count, height}
+				}
 			}
 			current_rock = getNextShape(current_rock, &occupied, height)
 		}
-		if i%1000000 == 0 {
-			fmt.Printf("%d\n", height)
+		if i%1000 == 0 {
+			fmt.Printf("Height: %d Rock Count: %d\n", height, rock_fall_count)
 		}
-		i++
 	}
-	// Idea: we only need to store everything up from where the first #######
-	// full line is. This will save memory. Is there any way to save CPU?
-	printOccupied(&occupied, current_rock, height+5)
-	fmt.Printf("%d\n", height)
+	fmt.Printf("%d\n", height-1+height_diff)
 }
 
 func main() {
@@ -166,6 +202,5 @@ func main() {
 	}()
 	raw_input, _ := os.ReadFile("./day17_input.txt")
 	input := string(raw_input)
-	puzzle1(input)
-	// puzzle2(input)
+	puzzle(input)
 }
