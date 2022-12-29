@@ -3,9 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
-	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"strings"
 )
@@ -197,9 +194,6 @@ func puzzle(input string) {
 }
 
 func main() {
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
 	raw_input, _ := os.ReadFile("./day17_input.txt")
 	input := string(raw_input)
 	puzzle(input)
