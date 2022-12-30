@@ -71,19 +71,13 @@ func simulateRounds(monkeys []*Monkey, count int, divide bool) int64 {
 		for _, monkey := range monkeys {
 			for _, worry := range monkey.items {
 				// Calculate new worry
-				// fmt.Printf("Worry before %d %s\n", worry, monkey.operation)
 				worry = doOperation(worry, monkey.operation, mod_num)
 				if divide {
 					worry /= 3
-				} else {
-
-					// find prime factors and take one of each to make number small?
 				}
-				// fmt.Printf("Worry after %d\n", worry)
 				// Throw to another monkey
 				test := worry%int64(monkey.test_divisible_num) == 0
 				next_index := monkey.throws_to[test]
-				// fmt.Printf("Throwing to %d\n", next_index)
 				next_monkey := monkeys[next_index]
 				next_monkey.items = append(next_monkey.items, worry)
 				monkey.throws++
