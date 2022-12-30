@@ -36,7 +36,7 @@ func ordered(left []any, right []any) (bool, bool) {
 				return is_ordered, false
 			}
 		} else if r_is_int && l_is_int {
-			println("Compare ", l_int, " ", r_int)
+			println("Compare integers: ", l_int, " ", r_int)
 			if l_int < r_int {
 				// Make a decision; ordered
 				return true, false
@@ -75,7 +75,7 @@ func ordered(left []any, right []any) (bool, bool) {
 	} else {
 		// Whichever list is smaller ran out first
 		fmt.Printf("Ran out of items: %v %v\n", left, right)
-		return len(left) < len(right), true
+		return len(left) < len(right), false
 	}
 }
 
@@ -132,5 +132,5 @@ func main() {
 	raw_input, _ := os.ReadFile("./day13_input.txt")
 	input := string(raw_input)
 	puzzle1(input)
-	puzzle2(input)
+	// puzzle2(input)
 }
